@@ -1,7 +1,3 @@
-Here is a comprehensive, professional `README.md` tailored specifically to the logic, features, and "Community Edition" nature of the script you provided.
-
----
-
 # 🚩 Operation RED-Frontline: Battlefield Logistics Engine v3.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
