@@ -65,6 +65,7 @@ cd Operation-RED-Frontline_JMak-Security
 ```bash
 pip install -r requirements.txt
 ```
+> **Performance note:** *runtime is dominated by local LLM inference. On CPU-only, a full audit can take ~1 hour; on a GPU (e.g. a Colab T4 or better) it's much faster. The engine also runs one request at a time by default — raise OLLAMA_MAX_CONCURRENT_TASKS on a stronger machine to parallelize.*
 
 ### 3. Environment Configuration
 Create a **`PLACEHOLDER.env`** in the root directory (this exact filename is what the engine loads at startup):
