@@ -147,5 +147,4 @@ This project is licensed under the **MIT License**.
 
 ---
 **Developed by:** [JMak-Security]  
-**Release:** v3.0-Community  
 **Status:** *Combat Ready.*
