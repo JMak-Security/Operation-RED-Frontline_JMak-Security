@@ -1,0 +1,11 @@
+# ORF v3.0 dependencies
+# (fastapi/uvicorn/celery/redis/psycopg2/httpx and the PQC crypto stack
+#  are not required by the standalone pipeline and have been removed here.)
+pydantic==2.6.4
+sqlalchemy==2.0.28
+psycopg2-binary==2.9.9
+aiohttp==3.9.3
+python-dotenv==1.0.1
+
+# Optional: enables the Bandit SAST check in the judge (INSECURE_CODE_GENERATION).
+bandit==1.7.8

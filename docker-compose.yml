@@ -1,0 +1,128 @@
+version: "3.8"
+
+services:
+  # =====================================================================
+  # 1. 隔離的資料庫節點（儲存歷史審計軌跡與破防證物）
+  # =====================================================================
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: redteam_postgres_db
+    environment:
+      POSTGRES_USER: redteam_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the environment}
+      POSTGRES_DB: redteam_battlefield
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redteam_admin -d redteam_battlefield"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - redteam_isolated_net
+    restart: always
+
+  # =====================================================================
+  # 2. 紅隊自動化變異戰場引擎（完全體零信任獨立隔離沙盒）
+  # =====================================================================
+  redfront-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redteam_battlefield_engine
+
+    environment:
+      - DATABASE_URL=postgresql://redteam_admin:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the environment}@postgres-db:5432/redteam_battlefield
+      - ENV_MODE=${ENV_MODE:-local}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_AUTH_TOKEN=${OLLAMA_AUTH_TOKEN:-}
+      - SAST_SANDBOX_URL=http://sast-sandbox:8080
+      - PRIMARY_PROVIDER=${PRIMARY_PROVIDER:-ollama}
+      - SECONDARY_PROVIDER=${SECONDARY_PROVIDER:-ollama}
+      - JUDGE_PROVIDER=${JUDGE_PROVIDER:-${SECONDARY_PROVIDER:-ollama}}
+      - PRIMARY_MODEL=${PRIMARY_MODEL:-}
+      - SECONDARY_MODEL=${SECONDARY_MODEL:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - NVIDIA_BASE_URL=${NVIDIA_BASE_URL:-}
+      - GROQ_BASE_URL=${GROQ_BASE_URL:-}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
+      - GOOGLE_GENAI_BASE_URL=${GOOGLE_GENAI_BASE_URL:-}
+      # 🎯 告訴 Python 不要去讀取 Windows 目錄，強制指定系統全局共享庫搜尋路徑
+      - LD_LIBRARY_PATH=/home/redteam_runner/_oqs/lib:/usr/local/lib
+      # ✨【純追加這一行】完美解開硬編碼，將並發任務上限安全注入本地 Python 沙盒！
+      - OLLAMA_MAX_CONCURRENT_TASKS=1
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      sast-sandbox:
+        condition: service_started
+        
+    # 🔒 零信任最高安全防禦：強制容器檔案系統完全唯讀，封死代碼逃逸漏洞
+    read_only: true
+    
+    # 🎯 記憶體防護雙通道：在記憶體中開闢讀寫區，徹底粉碎 read-only file system 限制
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128M
+      - /root:rw,noexec,nosuid,size=64M  # 🔒 保護並賦予系統層必要的記憶體暫存權限
+      
+    volumes:
+      # 📥 Input 通道：只將 main.py 與 CSV 檔案所在的 Windows 當前目錄以「唯讀 (:ro)」模式
+      # 掛載進容器的 /workspace，確保依賴不被污染，且資料集 100% 被主程式看見
+      - .:/workspace:ro
+      
+      # 🔒 核心隔離修正：利用 Docker 具名卷，將輸出路徑獨立覆蓋在 /workspace/secure_vault 上
+      # 這樣既能將加密報告順利吐回 Windows，又絕對不會引發目錄覆蓋衝突！
+      - vaultdata:/workspace/secure_vault:rw
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - redteam_isolated_net
+      - redteam_sast_net
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: "no" # 跑完一次自動收兵，保留破防證物，防止無限重跑
+
+  sast-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redteam_sast_sandbox
+    command: ["python", "sast_sandbox.py"]
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64M
+    volumes:
+      - .:/workspace:ro
+    networks:
+      - redteam_sast_net
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    cpus: 0.50
+    pids_limit: 64
+    restart: "no"
+
+volumes:
+  pgdata: {}
+  vaultdata: {}  # 🎯 聲明用來安全接收 PQC 加密報告的磁碟卷 Matrix
+
+networks:
+  redteam_isolated_net:
+    driver: bridge
+  redteam_sast_net:
+    driver: bridge
+    internal: true
