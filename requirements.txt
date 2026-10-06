@@ -1,0 +1,26 @@
+fastapi==0.110.0
+uvicorn==0.28.0
+pydantic==2.6.4
+celery==5.3.6
+redis==5.0.3
+sqlalchemy==2.0.28
+psycopg2-binary==2.9.9
+aiohttp==3.9.3
+httpx==0.27.0
+requests==2.31.0
+numpy>=1.24            # vvs_test.py — client-side attack analysis (ρ, Procrustes, AUC)
+datasets==2.18.0
+python-dotenv==1.0.1
+fpdf2==2.7.9
+
+# --- Post-quantum report vault (optional) -----------------------------------
+# AES-GCM leg of the hybrid encryption. Safe to install everywhere (wheels).
+pycryptodome==3.20.0
+# ML-KEM (Kyber768) leg. This needs the native liboqs (CMake build / network
+# fetch) and often has no prebuilt wheel, so it is NOT a hard requirement here —
+# the tool degrades to a plaintext report when it is absent. Install it manually
+# where you need quantum-safe encryption:
+#     pip install liboqs-python
+# IMPORTANT: the real library's PyPI name is `liboqs-python` (module: `oqs`).
+# Do NOT `pip install oqs` — that is an unrelated name-squatting package.
+# liboqs-python

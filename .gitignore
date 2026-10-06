@@ -1,0 +1,35 @@
+__pycache__/
+.env
+PLACEHOLDER.env
+.venv/
+*.pyc
+.DS_Store
+audit_authority.key
+audit_authority.pub
+*.pqc.json
+orf_settings.json
+orf_memory.db
+orf_chat_transcript.json
+
+# Generated reports / dossiers / PDFs
+secure_vault/
+*.xlsx
+dci_hkgai_retest_results.csv
+
+# Captured target intel + extracted backend
+_whitebox_backup_vvs/
+input_src/
+
+# Native liboqs build tree (created by liboqs-python auto-install)
+_oqs/
+**/_oqs/
+
+# Logs (run transcipts, telemetry)
+*.log
+run*.log
+
+# Seed corpora (downloaded datasets) + DCI retest data
+data/
+
+# Nested Superdata extractor: generated intel (may embed target details)
+Superdata-Extractor_v2/**/extracted_output/
