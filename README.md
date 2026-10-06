@@ -576,7 +576,6 @@ input_src/target_agent/     # white-box target surface (local; not committed)
 secure_vault/               # generated reports (JSON / PDF / dossier / .pqc.json)
 colab/ORF_OneCell_Runner.ipynb
 COOKBOOK.md                 # task-oriented recipes
-thumbnail.md                # release showcase (features at a glance)
 VERIFICATION_v4.0.0.md      # verification report (offline self-test evidence)
 ```
 

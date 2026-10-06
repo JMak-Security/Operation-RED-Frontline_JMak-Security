@@ -30,6 +30,3 @@ run*.log
 
 # Seed corpora (downloaded datasets) + DCI retest data
 data/
-
-# Nested Superdata extractor: generated intel (may embed target details)
-Superdata-Extractor_v2/**/extracted_output/
